@@ -9,5 +9,9 @@
         public Guid MarkaVozilaId { get; set; }
 
         public string MarkaVozilaNaziv { get; set; }
+
+        public Guid TipVozilaId { get; set; }
+
+        public string TipVozilaNaziv { get; set; }
     }
 }

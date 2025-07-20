@@ -45,10 +45,28 @@ namespace RegistracijaVozila.Repositories.Implementation
             
         }
 
-        public async Task<List<Vozilo>> GetAllAsync()
+        public async Task<(List<Vozilo> Items, int TotalCount)> GetAllAsync(string? searchQuery = null, int pageSize = 1000, int pageNumber = 1)
         {
-            return await appDbContext.Vozila.Include(x=>x.TipVozila).Include(x=>x.MarkaVozila).
-                Include(x=>x.ModelVozila).ToListAsync();
+            var query = appDbContext.Vozila
+                .Include(x => x.TipVozila)
+                .Include(x => x.MarkaVozila)
+                .Include(x => x.ModelVozila)
+                .AsQueryable();
+
+
+            if (string.IsNullOrWhiteSpace(searchQuery) == false)
+            {
+                query = query.Where(x => x.TipVozila.Naziv.Contains(searchQuery) ||
+                x.MarkaVozila.Naziv.Contains(searchQuery) ||
+                x.ModelVozila.Naziv.Contains(searchQuery) ||
+                x.TipVozila.Naziv.Contains(searchQuery));
+            }
+
+            
+            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            var totalCount = await query.CountAsync();
+
+            return (items, totalCount); 
         }
 
         public async Task<Vozilo?> GetVehicleByIdAsync(Guid id)
@@ -69,14 +87,12 @@ namespace RegistracijaVozila.Repositories.Implementation
             existingVozilo.TipVozilaId = vozilo.TipVozilaId;
             existingVozilo.ModelVozilaId = vozilo.ModelVozilaId;
             existingVozilo.MarkaVozilaId = vozilo.MarkaVozilaId;
-            existingVozilo.RegistarskaOznaka = vozilo.RegistarskaOznaka;
             existingVozilo.GodinaProizvodnje = vozilo.GodinaProizvodnje;
             existingVozilo.ZapreminaMotora = vozilo.ZapreminaMotora;
             existingVozilo.SnagaMotora = vozilo.SnagaMotora;
             existingVozilo.Masa = vozilo.Masa;
             existingVozilo.VrstaGoriva = vozilo.VrstaGoriva;
             existingVozilo.BrojSasije = vozilo.BrojSasije;
-            existingVozilo.DatumRegistracije = vozilo.DatumRegistracije;
             existingVozilo.DatumPrveRegistracije = vozilo.DatumPrveRegistracije;
 
             await appDbContext.SaveChangesAsync();

@@ -28,21 +28,28 @@ namespace RegistracijaVozila.Mappings
 
             CreateMap<Osiguranje, InsuranceDto>().ReverseMap();
 
+            CreateMap<Osiguranje, UpdateInsuranceRequestDto>().ReverseMap();
+
             CreateMap<VehicleTypeDto, TipVozila>().ReverseMap();
 
             CreateMap<CreateVehicleTypeRequestDto, TipVozila>().ReverseMap();
 
             CreateMap<UpdateVehicleTypeRequestDto, TipVozila>().ReverseMap();
 
-            CreateMap<MarkaVozila, VehicleBrandDto >().ForMember(
-                dest=>dest.TipVozila, opt=>opt.MapFrom(src=>src.TipVozila.Naziv)).
-                ForMember(dest=>dest.Kategorija, opt=>opt.MapFrom(src=>src.TipVozila.Kategorija)).ReverseMap();
+            CreateMap<MarkaVozila, VehicleBrandDto >()
+                .ForMember(dest => dest.TipVozila, opt => opt.MapFrom(src => src.TipVozila.Naziv))
+                .ForMember(dest => dest.Kategorija, opt => opt.MapFrom(src => src.TipVozila.Kategorija))
+                .ReverseMap();
 
             CreateMap<MarkaVozila, UpdateVehicleBrandRequestDto>().ReverseMap();
 
             CreateMap<CreateVehicleBrandRequestDto, MarkaVozila>().ReverseMap();
 
-            CreateMap<VehicleModelDto, ModelVozila>().ReverseMap();
+            CreateMap<ModelVozila,VehicleModelDto>()
+                .ForMember(dest=>dest.MarkaVozilaNaziv, opt=>opt.MapFrom(src=>src.MarkaVozila.Naziv))
+                .ForMember(dest=>dest.TipVozilaId, opt=>opt.MapFrom(src=>src.MarkaVozila.TipVozila.Id))
+                .ForMember(dest=>dest.TipVozilaNaziv, opt=>opt.MapFrom(src=>src.MarkaVozila.TipVozila.Naziv))
+                .ReverseMap();
 
             CreateMap<CreateVehicleModelRequestDto, ModelVozila>().ReverseMap();
 
@@ -51,21 +58,22 @@ namespace RegistracijaVozila.Mappings
             CreateMap<Registracija, RegistrationVehicleDto>()
                 .ForMember(dest => dest.Vlasnik, opt => opt.MapFrom(src => src.Vlasnik))
                 .ForMember(dest => dest.Vozilo, opt => opt.MapFrom(src => src.Vozilo))
-                .ForMember(dest => dest.Osiguranja, opt => opt.MapFrom(
-                    src => src.OsiguranjeRegistracija.Select(or => or.Osiguranje).ToList()))
+                .ForMember(dest => dest.Osiguranje, opt=>opt.MapFrom(src=>src.Osiguranje))
                 .ReverseMap();
 
-            CreateMap<Registracija, CreateRegistrationVehicleRequestDto>()
-                .ForMember(dest => dest.OsiguranjeIds, opt => opt.MapFrom(
-                    src => src.OsiguranjeRegistracija.Select(or => or.OsiguranjeVozilaId).ToList()))
-                .ReverseMap();
+            CreateMap<Registracija, CreateRegistrationVehicleRequestDto>().ReverseMap();
 
-            CreateMap<Registracija, UpdateRegistrationVehicleRequestDto>().
-                ForMember(dest => dest.OsiguranjeIds, opt => opt.MapFrom(
-                    src => src.OsiguranjeRegistracija.Select(or => or.OsiguranjeVozilaId).ToList()))
-                .ReverseMap();
+            CreateMap<Registracija, UpdateRegistrationVehicleRequestDto>().ReverseMap();
 
             CreateMap<UserDto,IdentityUser>().ReverseMap();
+
+            CreateMap<LoginResponseDto, IdentityUser>().ReverseMap();
+
+            CreateMap<LoginRequestDto, IdentityUser>().ReverseMap();
+
+            CreateMap<OsiguranjeCijene, CreateInsurancePriceRequestDto>().ReverseMap();
+
+            CreateMap<OsiguranjeCijene, InsurancePriceDto>().ReverseMap();
 
         }
     }

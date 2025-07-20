@@ -59,7 +59,9 @@ namespace RegistracijaVozila.Repositories.Implementation
 
         public async Task<List<MarkaVozila>> ListByTypeId(Guid id)
         {
-            return await appDbContext.MarkeVozila.Where(x => x.TipVozilaId == id).ToListAsync();
+            return await appDbContext.MarkeVozila
+                .Include(x=>x.TipVozila)
+                .Where(x => x.TipVozilaId == id).ToListAsync();
         }
 
         public async Task<MarkaVozila?> UpdateAsync(MarkaVozila markaVozila)

@@ -1,4 +1,5 @@
 ﻿using RegistracijaVozila.Models.Domain;
+using RegistracijaVozila.Results;
 
 namespace RegistracijaVozila.Models.DTO
 {
@@ -6,11 +7,13 @@ namespace RegistracijaVozila.Models.DTO
     {
         public Guid Id { get; set; }
 
+        public string RegistarskaOznaka { get; set; }
+
         public DateTime DatumRegistracije { get; set; }
 
         public DateTime DatumIstekaRegistracije { get; set; }
 
-        public float CijenaRegistracije { get; set; }
+        public decimal CijenaRegistracije { get; set; }
 
         public bool PrivremenaRegistracija { get; set; }
 
@@ -22,6 +25,8 @@ namespace RegistracijaVozila.Models.DTO
 
         public VehicleDto Vozilo { get; set; }
 
-        public List<InsuranceDto> Osiguranja { get; set; } = new();
+        public Guid OsiguranjeId { get; set; }
+
+        public InsuranceDto Osiguranje { get; set; }
     }
 }

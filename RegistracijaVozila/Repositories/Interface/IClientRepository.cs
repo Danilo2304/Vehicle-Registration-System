@@ -6,7 +6,8 @@ namespace RegistracijaVozila.Repositories.Interface
     {
         Task<Klijent> AddClientAsync(Klijent klijent);
 
-        Task<List<Klijent>> GetAllAsync();
+        Task<(List<Klijent> Items, int TotalCount)> GetAllAsync
+            (string? searchQuery = null, int pageNumber = 1, int pageSize = 1000);
 
         Task<Klijent?> GetClijentByIdAsync(Guid id);
 

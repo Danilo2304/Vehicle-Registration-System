@@ -24,6 +24,8 @@ namespace RegistracijaVozila.Data
 
         public DbSet<ModelVozila> ModeliVozila { get; set; }
 
+        public DbSet<OsiguranjeCijene> OsiguranjeCijene { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -58,18 +60,18 @@ namespace RegistracijaVozila.Data
                 .HasForeignKey(m => m.MarkaVozilaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<OsiguranjeRegistracija>()
-                .HasKey(or => new { or.RegistracijaId, or.OsiguranjeVozilaId });
+            //modelBuilder.Entity<OsiguranjeRegistracija>()
+            //    .HasKey(or => new { or.RegistracijaId, or.OsiguranjeVozilaId });
 
-            modelBuilder.Entity<OsiguranjeRegistracija>()
-                .HasOne(or => or.Registracija)
-                .WithMany(r => r.OsiguranjeRegistracija)
-                .HasForeignKey(or => or.RegistracijaId);
+            //modelBuilder.Entity<OsiguranjeRegistracija>()
+            //    .HasOne(or => or.Registracija)
+            //    .WithMany(r => r.OsiguranjeRegistracija)
+            //    .HasForeignKey(or => or.RegistracijaId);
 
-            modelBuilder.Entity<OsiguranjeRegistracija>()
-                .HasOne(or => or.Osiguranje)
-                .WithMany(o => o.OsiguranjeRegistracija)
-                .HasForeignKey(or => or.OsiguranjeVozilaId);
+            //modelBuilder.Entity<OsiguranjeRegistracija>()
+            //    .HasOne(or => or.Osiguranje)
+            //    .WithMany(o => o.OsiguranjeRegistracija)
+            //    .HasForeignKey(or => or.OsiguranjeVozilaId);
         }
 
 

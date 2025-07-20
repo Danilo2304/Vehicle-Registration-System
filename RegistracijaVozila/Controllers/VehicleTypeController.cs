@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RegistracijaVozila.Models.Domain;
 using RegistracijaVozila.Models.DTO;
@@ -27,11 +28,9 @@ namespace RegistracijaVozila.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            var vehicleTypeDomainList = await vehicleTypeRepository.GetAllAsync();
+            var response = await vehicleTypeService.GetAllAsync();
 
-            var vehicleTypeDtoList = mapper.Map<List<VehicleTypeDto>>(vehicleTypeDomainList);
-
-            return Ok(vehicleTypeDtoList);
+            return Ok(response);
         }
 
         [HttpPost]
@@ -49,26 +48,23 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-
-
-            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var vehicleTypeDomain = await vehicleTypeRepository.GetByIdAsync(id);
+            var response = await vehicleTypeService.GetById(id);
 
-            if(vehicleTypeDomain == null)
+            if (!response.Success)
             {
-                return NotFound(new ApiError
+                var parts = response.Message?.Split(":", 2);
+                return BadRequest(new ApiError
                 {
-                    ErrorCode = "VEHICLE_TYPE_NOT_FOUND",
-                    Message = $"Vehicle type with the Id {id} was not found"
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : response.Message
                 });
             }
-
-            var response = mapper.Map<VehicleTypeDto>(vehicleTypeDomain);
 
             return Ok(response);
         }
@@ -88,7 +84,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPut]
@@ -107,7 +103,7 @@ namespace RegistracijaVozila.Controllers
 
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
     }
 }

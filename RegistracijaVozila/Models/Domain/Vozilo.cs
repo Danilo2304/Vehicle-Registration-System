@@ -13,8 +13,6 @@
         public Guid ModelVozilaId { get; set; }
         public ModelVozila ModelVozila { get; set; }
 
-        public string RegistarskaOznaka { get; set; }
-
         public int GodinaProizvodnje { get; set; }
 
         public float ZapreminaMotora { get; set; }
@@ -26,8 +24,6 @@
         public int SnagaMotora { get; set; }
 
         public string BrojSasije { get; set; }
-
-        public DateTime DatumRegistracije { get; set; }
 
         public DateTime DatumPrveRegistracije { get; set; }
 

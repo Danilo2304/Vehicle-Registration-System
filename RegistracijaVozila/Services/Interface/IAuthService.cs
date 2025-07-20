@@ -8,7 +8,7 @@ namespace RegistracijaVozila.Services.Interface
     {
         Task<RepositoryResult<UserDto>> RegisterAsync(RegisterRequestDto request);
 
-        Task<RepositoryResult<string>> LoginAsync(LoginRequestDto request);
+        Task<RepositoryResult<LoginResponseDto>> LoginAsync(LoginRequestDto request);
 
         Task<RepositoryResult<UserDto>> DeleteAsync(string id);
 

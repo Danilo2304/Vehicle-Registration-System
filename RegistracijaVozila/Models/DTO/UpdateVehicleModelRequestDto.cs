@@ -6,5 +6,6 @@
         public string Naziv { get; set; }
 
         public Guid MarkaVozilaId { get; set; }
+        
     }
 }

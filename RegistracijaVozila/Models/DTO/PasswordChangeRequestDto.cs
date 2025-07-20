@@ -2,7 +2,6 @@
 {
     public class PasswordChangeRequestDto
     {
-        public string Id { get; set; }
 
         public string CurrentPassword { get; set; }
 

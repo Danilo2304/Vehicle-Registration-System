@@ -6,7 +6,7 @@ namespace RegistracijaVozila.Repositories.Interface
     {
         Task<Vozilo> AddAsync(Vozilo vozilo);
 
-        Task<List<Vozilo>> GetAllAsync();
+        Task<(List<Vozilo> Items, int TotalCount)> GetAllAsync(string? searchQuery = null, int pageSize = 1000, int pageNumber = 1);
 
         Task<Vozilo?> GetVehicleByIdAsync(Guid id);
 

@@ -8,6 +8,7 @@ using RegistracijaVozila.Models.DTO;
 using RegistracijaVozila.Repositories.Interface;
 using RegistracijaVozila.Results;
 using RegistracijaVozila.Services.Interface;
+using System.Runtime.CompilerServices;
 
 namespace RegistracijaVozila.Services.Implementation
 {
@@ -63,7 +64,7 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<VehicleBrandDto>(result);
 
-            return RepositoryResult<VehicleBrandDto>.Ok(response);
+            return RepositoryResult<VehicleBrandDto>.Ok(response, "New vehicle brand has successfully been created!");
         }
 
         public async Task<RepositoryResult<bool>> ValidateVehicleBrandDeleteRequestAsync(Guid id)
@@ -102,7 +103,7 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<VehicleBrandDto>(vehicleDomain);
 
-            return RepositoryResult<VehicleBrandDto>.Ok(response);
+            return RepositoryResult<VehicleBrandDto>.Ok(response, "Vehicle brand has successfully been deleted!");
         }
 
         public async Task<RepositoryResult<bool>> 
@@ -149,9 +150,67 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<VehicleBrandDto>(updatedBrandVehicle);
 
+            return RepositoryResult<VehicleBrandDto>.Ok(response, "Vehicle brand has been successfully updated!");
+        }
+
+        public async Task<RepositoryResult<bool>> ValidateVehicleBrandGetListByTypeAsync(Guid id)
+        {
+            if(!await appDbContext.MarkeVozila.AnyAsync(x=>x.TipVozilaId ==  id))
+            {
+                return RepositoryResult<bool>.Fail($"INCORRECT TYPE ID: Vehicle type with the id {id}" +
+                    $" doesn't exist!");
+            }
+
+            return RepositoryResult<bool>.Ok(true);
+        }
+
+        public async Task<RepositoryResult<List<VehicleBrandDto>>> GetListByType(Guid id)
+        {
+            var validationResult = await ValidateVehicleBrandGetListByTypeAsync(id);
+
+            if (!validationResult.Success)
+            {
+                return RepositoryResult<List<VehicleBrandDto>>.Fail(validationResult.Message);
+            }
+
+            var vehicleBrandsDomain = await vehicleBrandRepository.ListByTypeId(id);
+
+            var response = mapper.Map<List<VehicleBrandDto>>(vehicleBrandsDomain);
+
+            return RepositoryResult<List<VehicleBrandDto>>.Ok(response);
+        }
+
+        public async Task<RepositoryResult<bool>> ValidateVehicleBrandGetByIdAsync(Guid id)
+        {
+            if (!await appDbContext.MarkeVozila.AnyAsync(x => x.Id == id))
+            {
+                return RepositoryResult<bool>.Fail($"INCORRECT BRAND ID: Vehicle brand with the  id {id}" +
+                    $" doesn't exist!");
+            }
+
+            return RepositoryResult<bool>.Ok(true);
+        }
+
+        public async Task<RepositoryResult<VehicleBrandDto>> GetById(Guid id)
+        {
+            var validationResult = await ValidateVehicleBrandGetByIdAsync(id);
+
+            if (!validationResult.Success)
+            {
+                return RepositoryResult<VehicleBrandDto>.Fail(validationResult.Message);
+            }
+
+            var vehicleBrandDomain = await vehicleBrandRepository.GetByIdAsync(id);
+
+            var response = mapper.Map<VehicleBrandDto>(vehicleBrandDomain);
+
             return RepositoryResult<VehicleBrandDto>.Ok(response);
         }
     }
 }
+
+
+
+
 
 

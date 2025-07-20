@@ -6,10 +6,8 @@
 
         public string Naziv {  get; set; }
 
-        public string TipOsiguranja { get; set; }
+        public ICollection<Registracija> Registracije { get; set; } = new List<Registracija>();
 
-        public ICollection<OsiguranjeRegistracija> OsiguranjeRegistracija { get; set; } 
-            = new List<OsiguranjeRegistracija>();
-
+        public ICollection<OsiguranjeCijene> OsiguranjeCijene { get; set; }
     }
 }

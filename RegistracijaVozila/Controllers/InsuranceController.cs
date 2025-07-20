@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RegistracijaVozila.Models.Domain;
 using RegistracijaVozila.Models.DTO;
 using RegistracijaVozila.Repositories.Interface;
+using RegistracijaVozila.Services.Interface;
 
 namespace RegistracijaVozila.Controllers
 {
@@ -11,56 +13,84 @@ namespace RegistracijaVozila.Controllers
     [ApiController]
     public class InsuranceController : ControllerBase
     {
-        private readonly IInsuranceRepository insuranceRepository;
-        private readonly IMapper mapper;
+        private readonly IInsuranceService insuranceService;
 
-        public InsuranceController(IInsuranceRepository insuranceRepository, IMapper mapper)
+        public InsuranceController(IInsuranceService insuranceService)
         {
-            this.insuranceRepository = insuranceRepository;
-            this.mapper = mapper;
+            this.insuranceService = insuranceService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateInsuranceRequestDto request)
         {
-            var insuranceDomain = mapper.Map<Osiguranje>(request);
+            var result = await insuranceService.CreateInsuranceAsync(request);
 
-            insuranceDomain = await insuranceRepository.CreateInsuranceAsync(insuranceDomain);
-
-            var response = mapper.Map<InsuranceDto>(insuranceDomain);
-
-            return Ok(response);
+            return CreatedAtAction(nameof(GetById), new { result.Data.Id }, result);
         }
 
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            var insuranceDomainList = await insuranceRepository.GetAllAsync();
+            var result = await insuranceService.GetAllAsync();
 
-            if (insuranceDomainList == null || !insuranceDomainList.Any())
-            {
-                return NotFound("No insurance records found");
-            }
-
-            var insuranceDtoList = mapper.Map<List<InsuranceDto>>(insuranceDomainList);
-            
-
-            return Ok(insuranceDtoList);
+            return Ok(result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
-            var insuranceDomain = await insuranceRepository.GetInsuranceByIdAsync(id);
+            var result = await insuranceService.GetInsuranceByIdAsync(id);
 
-            if(insuranceDomain == null)
+            if (!result.Success)
             {
-                return NotFound($"No insurance with the ID {id} was found.");
+                var parts = result.Message.Split(":", 2);
+
+                return BadRequest(new ApiError
+                {
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : result.Message
+                });
             }
 
-            var response = mapper.Map<InsuranceDto>(insuranceDomain);
+            return Ok(result);
+        }
 
-            return Ok(response);
+        [HttpDelete]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var result = await insuranceService.DeleteAsync(id);
+
+            if (!result.Success)
+            {
+                var parts = result.Message.Split(":", 2);
+
+                return BadRequest(new ApiError
+                {
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : result.Message
+                });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update(UpdateInsuranceRequestDto request)
+        {
+            var result = await insuranceService.UpdateAsync(request);
+
+            if (!result.Success)
+            {
+                var parts = result.Message.Split(":", 2);
+
+                return BadRequest(new ApiError
+                {
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : result.Message
+                });
+            }
+
+            return Ok(result);
         }
     }
 }

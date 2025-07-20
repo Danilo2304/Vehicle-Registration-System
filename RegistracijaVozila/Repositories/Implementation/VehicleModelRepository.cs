@@ -16,8 +16,10 @@ namespace RegistracijaVozila.Repositories.Implementation
 
         public async Task<List<ModelVozila>> ListByBrandId(Guid id)
         {
-            return await appDbContext.ModeliVozila.
-                Include(x=>x.MarkaVozila).Where(x => x.MarkaVozilaId == id).ToListAsync();
+            return await appDbContext.ModeliVozila
+                .Include(x=>x.MarkaVozila)
+                .ThenInclude(x=>x.TipVozila)
+                .Where(x => x.MarkaVozilaId == id).ToListAsync();
         }
 
         public async Task<ModelVozila> AddAsync(ModelVozila modelVozila)
@@ -30,9 +32,10 @@ namespace RegistracijaVozila.Repositories.Implementation
 
         public async Task<ModelVozila?> DeleteAsync(Guid id)
         {
-            var existingVehicle = await appDbContext.ModeliVozila.
-                Include(x=>x.MarkaVozila).
-                FirstOrDefaultAsync(x => x.Id == id);
+            var existingVehicle = await appDbContext.ModeliVozila
+                .Include(x=>x.MarkaVozila)
+                .ThenInclude(x=>x.TipVozila)
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (existingVehicle == null)
             {
@@ -46,15 +49,18 @@ namespace RegistracijaVozila.Repositories.Implementation
 
         public async Task<ModelVozila?> GetByIdAsync(Guid id)
         {
-            return await appDbContext.ModeliVozila.
-                Include(x=>x.MarkaVozila).FirstOrDefaultAsync(x => x.Id == id);
+            return await appDbContext.ModeliVozila
+                .Include(x=>x.MarkaVozila)
+                .ThenInclude(x=>x.TipVozila)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<ModelVozila?> UpdateAsync(ModelVozila modelVozila)
         {
-            var existingVehicle = await appDbContext.ModeliVozila.
-                Include(x=>x.MarkaVozila).
-                FirstOrDefaultAsync(x => x.Id == modelVozila.Id);
+            var existingVehicle = await appDbContext.ModeliVozila
+                 .Include(x=>x.MarkaVozila)
+                 .ThenInclude(x=>x.TipVozila)
+                 .FirstOrDefaultAsync(x => x.Id == modelVozila.Id);
 
             if (existingVehicle != null)
             {

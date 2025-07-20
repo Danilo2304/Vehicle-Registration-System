@@ -9,6 +9,8 @@ namespace RegistracijaVozila.Services.Interface
 
         Task<RepositoryResult<bool>?> ValidateVehicleDeleteRequestAsync(Guid id);
 
+        Task<RepositoryResult<bool>?> ValidateGetVehicleByIdAsyncRequestAsync(Guid id);
+
         Task<RepositoryResult<bool>?> ValidateVehicleUpdateRequestAsync(UpdateVehicleDto request);
 
         Task<RepositoryResult<VehicleDto>> CreateVehicleAsync(CreateVehicleRequestDto request);
@@ -16,5 +18,9 @@ namespace RegistracijaVozila.Services.Interface
         Task<RepositoryResult<VehicleDto>> DeleteVehicleAsync(Guid id);
 
         Task<RepositoryResult<VehicleDto>> UpdateVehicleAsync(UpdateVehicleDto request);
+
+        Task<RepositoryResult<PagedResult<VehicleDto>>>  GetAllAsync(string? searchQuery = null, int pageSize = 1000, int pageNumber = 1);
+
+        Task<RepositoryResult<VehicleDto>> GetVehicleByIdAsync(Guid id);
     }
 }

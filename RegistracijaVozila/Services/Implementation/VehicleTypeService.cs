@@ -65,7 +65,7 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<VehicleTypeDto>(vehicleDomain);
 
-            return RepositoryResult<VehicleTypeDto>.Ok(response);
+            return RepositoryResult<VehicleTypeDto>.Ok(response, "New type of vehicle has successfully been created!");
         }
 
         public async Task<RepositoryResult<bool>> ValidateVehicleTypeDeleteRequestAsync(Guid id)
@@ -101,7 +101,7 @@ namespace RegistracijaVozila.Services.Implementation
 
             var reponse = mapper.Map<VehicleTypeDto>(vehicleTypeDomain);
 
-            return RepositoryResult<VehicleTypeDto>.Ok(reponse);
+            return RepositoryResult<VehicleTypeDto>.Ok(reponse, "Vehicle type has successfully been deleted!");
         }
 
         public async Task<RepositoryResult<bool>> ValidateVehicleTypeUpdateRequestAsync(UpdateVehicleTypeRequestDto request)
@@ -147,7 +147,43 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<VehicleTypeDto>(vehicleTypeDomain);
 
+            return RepositoryResult<VehicleTypeDto>.Ok(response, "Vehicle type has successfully been updated!");
+        }
+
+        public async Task<RepositoryResult<List<VehicleTypeDto>>> GetAllAsync()
+        {
+            var vehicleTypesDomain = await vehicleTypeRepository.GetAllAsync();
+
+            var response = mapper.Map<List<VehicleTypeDto>>(vehicleTypesDomain);
+
+            return RepositoryResult<List<VehicleTypeDto>>.Ok(response);
+        }
+
+        public async Task<RepositoryResult<bool>> ValidateVehicleTypeGetByIdAsync(Guid id)
+        {
+            if(!await appDbContext.TipoviVozila.AnyAsync(x=>x.Id == id))
+            {
+                return RepositoryResult<bool>.Fail($"VEHICLE_TYPE_NOT_FOUND: Vehicle type with the Id {id} was not found");
+            }
+
+            return RepositoryResult<bool>.Ok(true);
+        }
+
+        public async Task<RepositoryResult<VehicleTypeDto>> GetById(Guid id)
+        {
+            var validationResult = await ValidateVehicleTypeGetByIdAsync(id);
+
+            if (!validationResult.Success)
+            {
+                return RepositoryResult<VehicleTypeDto>.Fail(validationResult.Message);
+            }
+
+            var vehicleTypeDomain = await vehicleTypeRepository.GetByIdAsync(id);
+
+            var response = mapper.Map<VehicleTypeDto>(vehicleTypeDomain);
+
             return RepositoryResult<VehicleTypeDto>.Ok(response);
         }
+
     }
 }

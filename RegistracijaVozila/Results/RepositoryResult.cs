@@ -16,6 +16,11 @@
         public static RepositoryResult<T> Ok() =>
         new RepositoryResult<T> { Success = true };
 
+        public static RepositoryResult<T> Ok(T data, string message)
+        {
+            return new RepositoryResult<T> { Data = data, Success = true, Message = message };
+        }
+
         public static RepositoryResult<T> Fail(string message) =>
             new RepositoryResult<T> {Success = false, Message = message};
 

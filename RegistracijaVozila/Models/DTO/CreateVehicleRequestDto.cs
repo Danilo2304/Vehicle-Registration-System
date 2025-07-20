@@ -14,8 +14,6 @@ namespace RegistracijaVozila.Models.DTO
         [Required(ErrorMessage = "ModelVozilaId field is required")]
         public Guid? ModelVozilaId { get; set; }
 
-        public string RegistarskaOznaka { get; set; }
-
         public int GodinaProizvodnje { get; set; }
 
         public float ZapreminaMotora { get; set; }

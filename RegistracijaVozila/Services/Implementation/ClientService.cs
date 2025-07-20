@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using RegistracijaVozila.Data;
 using RegistracijaVozila.Models.Domain;
@@ -59,7 +60,7 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<ClientDto>(clientDomain);
 
-            return RepositoryResult<ClientDto>.Ok(response);
+            return RepositoryResult<ClientDto>.Ok(response, "Client successfully created!");
         }
 
         public async Task<RepositoryResult<bool>> ValidateClientDeleteRequestAsync(Guid id)
@@ -95,7 +96,7 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<ClientDto>(existingClient);
 
-            return RepositoryResult<ClientDto>.Ok(response);
+            return RepositoryResult<ClientDto>.Ok(response, "Client successfully deleted!");
         }
 
         public async Task<RepositoryResult<bool>> ValidateClientUpdateRequestAsync(UpdateClientRequestDto request)
@@ -140,8 +141,51 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<ClientDto>(clientDomain);
 
+            return RepositoryResult<ClientDto>.Ok(response, "Client successfully updated!");
+        }
+
+        public async Task<RepositoryResult<PagedResult<ClientDto>>> GetClientsAsync
+            (string? searchQuery = null, int pageNumber = 1, int pageSize = 1000)
+        {
+            var (clients, totalCount) = await clientRepository.GetAllAsync(searchQuery, pageNumber, pageSize);
+
+            var response = new PagedResult<ClientDto>
+            {
+                Items = mapper.Map<List<ClientDto>>(clients),
+                TotalCount = totalCount
+            };
+
+
+            return RepositoryResult<PagedResult<ClientDto>>.Ok(response, "Clients loaded successfully");
+        }
+
+        public async Task<RepositoryResult<bool>> ValidateClientId(Guid id)
+        {
+            if (!await appDbContext.Klijenti.AnyAsync(x => x.Id == id))
+            {
+                return RepositoryResult<bool>.Fail($"CLIENT_NOT_FOUND, Client with the Id {id} was not found");
+            }
+
+            return RepositoryResult<bool>.Ok(true);
+        }
+
+        public async Task<RepositoryResult<ClientDto>> GetClijentByIdAsync(Guid id)
+        {
+            var validationResult = await ValidateClientId(id);
+
+            if (!validationResult.Success)
+            {
+                return RepositoryResult<ClientDto>.Fail(validationResult.Message);
+            }
+
+            var clientDomain = await clientRepository.GetClijentByIdAsync(id);
+
+            var response = mapper.Map<ClientDto>(clientDomain);
+
             return RepositoryResult<ClientDto>.Ok(response);
         }
+
+        
     }
 }
 

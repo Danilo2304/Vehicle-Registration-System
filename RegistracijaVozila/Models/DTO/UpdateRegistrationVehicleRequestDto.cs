@@ -6,9 +6,9 @@ namespace RegistracijaVozila.Models.DTO
     {
         public Guid Id { get; set; }
 
-        public DateTime DatumRegistracije { get; set; }
+        public string RegistarskaOznaka { get; set; }
 
-        public float CijenaRegistracije { get; set; }
+        public DateTime DatumRegistracije { get; set; }
 
         public bool PrivremenaRegistracija { get; set; }
 
@@ -16,6 +16,6 @@ namespace RegistracijaVozila.Models.DTO
 
         public Guid VoziloId { get; set; }
 
-        public List<Guid> OsiguranjeIds { get; set; } = new();
+        public Guid OsiguranjeId { get; set; }
     }
 }

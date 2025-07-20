@@ -42,24 +42,14 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return CreatedAtAction(nameof(GetClientById), new { id = result.Data.Id}, result.Data);
+            return CreatedAtAction(nameof(GetClientById), new { id = result.Data.Id}, result);
         }
 
         [HttpGet]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? searchQuery,[FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 1000)
         {
-            var clientDomainList = await clientRepository.GetAllAsync();
-
-            if (clientDomainList == null)
-            {
-                return NotFound(new ApiError
-                {
-                    ErrorCode = "NO_CLIENT_LIST_FOUND",
-                    Message = "No clients have been found in the database"
-                });
-            }
-
-            var response = mapper.Map<List<ClientDto>>(clientDomainList);
+            var response = await clientService.GetClientsAsync(searchQuery, pageNumber, pageSize);
             
             return Ok(response);
         }
@@ -67,19 +57,7 @@ namespace RegistracijaVozila.Controllers
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetClientById([FromRoute] Guid id)
         {
-            var clientDomain = await clientRepository.GetClijentByIdAsync(id);
-
-            if(clientDomain == null)
-            {
-                return NotFound(new ApiError
-                {
-                    ErrorCode = "CLIENT_NOT_FOUND",
-                    Message = $"Client with the Id {id} was not found"
-                });
-            }
-
-
-            var response = mapper.Map<ClientDto>(clientDomain);
+            var response = await clientService.GetClijentByIdAsync(id);
 
             return Ok(response);
         }
@@ -87,20 +65,20 @@ namespace RegistracijaVozila.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await clientService.DeleteClientAsync(id);
+            var response = await clientService.DeleteClientAsync(id);
 
-            if (!result.Success)
+            if (!response.Success)
             {
-                var parts = result.Message?.Split(":", 2);
+                var parts = response.Message?.Split(":", 2);
 
                 return BadRequest(new ApiError
                 {
                     ErrorCode = parts?[0],
-                    Message = parts?[1].Length > 1 ? parts[1] : result.Message
+                    Message = parts?[1].Length > 1 ? parts[1] : response.Message
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(response);
 
         }
 
@@ -120,7 +98,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
     }

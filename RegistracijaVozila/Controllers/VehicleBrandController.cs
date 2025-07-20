@@ -27,20 +27,20 @@ namespace RegistracijaVozila.Controllers
         [HttpGet("ListById/{id:guid}")]
         public async Task<IActionResult> List(Guid id)
         {
-            var vehicleBrandDomainList = await vehicleBrandRepository.ListByTypeId(id);
+            var response = await vehicleBrandService.GetListByType(id);
 
-            if (!vehicleBrandDomainList.Any())
+            if (!response.Success)
             {
-                return NotFound(new ApiError
+                var parts = response.Message?.Split(":", 2);
+
+                return BadRequest(new ApiError
                 {
-                    ErrorCode = "NO_BRANDS_FOUND",
-                    Message = $"No vehicle brands found for type with Id {id}"
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : response.Message
                 });
             }
 
-            var vehicleBrandDtoList = mapper.Map<List<VehicleBrandDto>>(vehicleBrandDomainList);
-
-            return Ok(vehicleBrandDtoList);
+            return Ok(response);
         }
 
         [HttpPost]
@@ -59,24 +59,24 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return CreatedAtAction(nameof(GetById), new {id = result.Data.Id},result.Data);
+            return CreatedAtAction(nameof(GetById), new {id = result.Data.Id},result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var vehicleBrandDomain = await vehicleBrandRepository.GetByIdAsync(id);
+            var response = await vehicleBrandService.GetById(id);
 
-            if (vehicleBrandDomain == null)
+            if (!response.Success)
             {
-                return NotFound(new ApiError
+                var parts = response.Message?.Split(":", 2);
+
+                return BadRequest(new ApiError
                 {
-                    ErrorCode = "VEHICLE_BRAND_NOT_FOUND",
-                    Message = $"Vehicle brand with the Id {id} was not found"
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : response.Message
                 });
             }
-
-            var response = mapper.Map<VehicleBrandDto>(vehicleBrandDomain);
 
             return Ok(response);
         }
@@ -97,7 +97,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPut]
@@ -116,7 +116,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
     }
 }

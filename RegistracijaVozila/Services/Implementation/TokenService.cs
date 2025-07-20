@@ -30,8 +30,9 @@ namespace RegistracijaVozila.Services.Implementation
 
             var token = new JwtSecurityToken(
                 issuer: configuration["Jwt:Issuer"],
+                audience: configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddSeconds(60),
+                expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: credentials
                 );
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RegistracijaVozila.Models.DTO;
@@ -7,23 +8,22 @@ using RegistracijaVozila.Services.Interface;
 
 namespace RegistracijaVozila.Controllers
 {
+    
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<IdentityUser> userManager;
-        private readonly ITokenRepository tokenRepository;
         private readonly IAuthService authService;
 
-        public AuthController(UserManager<IdentityUser> userManager, ITokenRepository tokenRepository,
+        public AuthController(UserManager<IdentityUser> userManager, 
             IAuthService authService)
         {
             this.userManager = userManager;
-            this.tokenRepository = tokenRepository;
             this.authService = authService;
         }
 
-
+        [AllowAnonymous]
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
@@ -39,6 +39,7 @@ namespace RegistracijaVozila.Controllers
             return Ok(result.Data);
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
@@ -90,11 +91,14 @@ namespace RegistracijaVozila.Controllers
             return Ok(result.Data);
         }
 
+        //[Authorize]
         [HttpPut("changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeRequestDto request)
         {
+            var userId = userManager.GetUserId(User);
+
             var result = await authService.ChangePasswordAsync
-                (request.Id, request.CurrentPassword, request.NewPassword);
+                (userId, request.CurrentPassword, request.NewPassword);
 
             if (!result.Success)
             {

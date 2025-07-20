@@ -13,28 +13,20 @@ namespace RegistracijaVozila.Controllers
     [ApiController]
     public class VehicleController : ControllerBase
     {
-        private readonly IVehicleRepository vehicleRepository;
-        private readonly IMapper mapper;
-        private readonly IRegistrationVehicleRepository registrationVehicleRepository;
         private readonly IVehicleService vehicleService;
 
-        public VehicleController(IVehicleRepository vehicleRepository, IMapper mapper,
-            IRegistrationVehicleRepository registrationVehicleRepository, IVehicleService vehicleService)
+        public VehicleController(IVehicleService vehicleService)
         {
-            this.vehicleRepository = vehicleRepository;
-            this.mapper = mapper;
-            this.registrationVehicleRepository = registrationVehicleRepository;
             this.vehicleService = vehicleService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? searchQuery, [FromQuery] int pageSize = 1000,
+            [FromQuery] int pageNumber = 1)
         {
-            var vehiclesDomainList = await vehicleRepository.GetAllAsync();
-
-            var vehiclesDtoList = mapper.Map<List<VehicleDto>>(vehiclesDomainList);
+            var result = await vehicleService.GetAllAsync(searchQuery, pageSize, pageNumber);
             
-            return Ok(vehiclesDtoList);
+            return Ok(result);
         }
 
         [HttpPost]
@@ -52,27 +44,25 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return CreatedAtAction(nameof(GetVehicleById), new { id = result.Data.Id }, result.Data);
+            return CreatedAtAction(nameof(GetVehicleById), new { id = result.Data.Id }, result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetVehicleById([FromRoute] Guid id)
         {
-            var vehicleDomain = await vehicleRepository.GetVehicleByIdAsync(id);
+            var result  = await vehicleService.GetVehicleByIdAsync(id);
 
-            if(vehicleDomain == null)
+            if(!result.Success)
             {
-                return NotFound(new ApiError
+                var parts = result.Message?.Split(':', 2);
+                return BadRequest(new ApiError
                 {
-                    ErrorCode = "VEHICLE_NOT_FOUND",
-                    Message = $"Vehicle with the Id {id} was not found"
+                    ErrorCode = parts?[0],
+                    Message = parts?.Length > 1 ? parts[1] : result.Message
                 });
             }
 
-            var response = mapper.Map<VehicleDto>(vehicleDomain);
-
-            return Ok(response);
-            
+            return Ok(result);
         }
 
         [HttpDelete]
@@ -90,7 +80,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPut]
@@ -108,7 +98,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
 using RegistracijaVozila.Data;
 using RegistracijaVozila.Models.Domain;
 using RegistracijaVozila.Models.DTO;
@@ -15,19 +16,15 @@ namespace RegistracijaVozila.Controllers
     [ApiController]
     public class RegistrationVehicleController : ControllerBase
     {
-        private readonly IMapper mapper;
-        private readonly IRegistrationVehicleRepository registrationVehicleRepository;
-        private readonly RegistracijaVozilaDbContext appDbContext;
         private readonly IRegistrationVehicleService registrationVehicleService;
+        private readonly IEmailService emailService;
 
-        public RegistrationVehicleController(IMapper mapper, 
-            IRegistrationVehicleRepository registrationVehicleRepository, 
-            RegistracijaVozilaDbContext appDbContext, IRegistrationVehicleService registrationVehicleService)
+        public RegistrationVehicleController(IRegistrationVehicleService registrationVehicleService,
+            IEmailService emailService)
         {
-            this.mapper = mapper;
-            this.registrationVehicleRepository = registrationVehicleRepository;
-            this.appDbContext = appDbContext;
             this.registrationVehicleService = registrationVehicleService;
+            this.emailService = emailService;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
         [HttpPost]
@@ -46,38 +43,41 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data);
+            var confirmationData = await registrationVehicleService.GenerateConfirmation(result.Data.Id);
+            var document = new ConfirmationRegistrationDocument(confirmationData.Data);
+            var pdfBytes = document.GeneratePdf();
+            await emailService.SendConfirmationEmailAsync(confirmationData.Data.Vlasnik.Email, pdfBytes);
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
         }
 
-
         [HttpGet]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? searchQuery, [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 1000)
         {
-            var registrationVehicleDomainList = await registrationVehicleRepository.GetAllAsync();
+            var result = await 
+                registrationVehicleService.GetAllAsync(searchQuery, pageNumber, pageSize);
 
-            var registrationVehicleDtoList = mapper.Map<List<RegistrationVehicleDto>>
-                (registrationVehicleDomainList);
-
-            return Ok(registrationVehicleDtoList);
+            return Ok(result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var registrationVehicleDomain = await registrationVehicleRepository.GetByIdAsync(id);
+            var result = await registrationVehicleService.GetByIdAsync(id);
 
-            if (registrationVehicleDomain == null)
+            if (!result.Success)
             {
-                return NotFound(new ApiError
+                var parts = result.Message?.Split(":", 2);
+
+                return BadRequest(new ApiError
                 {
-                    ErrorCode = "REGISTRATION_VEHICLE_NOT_FOUND",
-                    Message = $"Vehicle registration with the Id {id} was not found"
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts?[1] : result.Message
                 });
             }
 
-            var response = mapper.Map<RegistrationVehicleDto>(registrationVehicleDomain);
-
-            return Ok(response);
+            return Ok(result);
         }
 
         [HttpDelete]
@@ -95,7 +95,7 @@ namespace RegistracijaVozila.Controllers
                     Message = parts?[1].Length > 1 ? parts?[1] : result.Message
                 });
             }
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPut]
@@ -114,7 +114,31 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
+        }
+
+        [HttpGet("potvrda/{id}")]
+        public async Task<IActionResult> GenerateConfirmation(Guid id)
+        {
+            var result = await registrationVehicleService.GenerateConfirmation(id);
+
+            var document = new ConfirmationRegistrationDocument(result.Data);
+            var pdfBytes = document.GeneratePdf();
+
+            return File(pdfBytes, "application/pdf", "PotvrdaRegistracije.pdf");
+        }
+
+        [HttpGet("potvrda-mail/{id}")]
+        public async Task<IActionResult> GenerateAndSendConfirmation(Guid id)
+        {
+            var result = await registrationVehicleService.GenerateConfirmation(id);
+
+            var document = new ConfirmationRegistrationDocument(result.Data);
+            var pdfBytes = document.GeneratePdf();
+
+            await emailService.SendConfirmationEmailAsync(result.Data.Vlasnik.Email, pdfBytes);
+
+            return Ok("PDF potvrda je poslata mejlom");
         }
     }
 }

@@ -114,28 +114,34 @@ namespace RegistracijaVozila.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TipOsiguranja")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Osiguranja");
                 });
 
-            modelBuilder.Entity("RegistracijaVozila.Models.Domain.OsiguranjeRegistracija", b =>
+            modelBuilder.Entity("RegistracijaVozila.Models.Domain.OsiguranjeCijene", b =>
                 {
-                    b.Property<Guid>("RegistracijaId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("OsiguranjeVozilaId")
+                    b.Property<int>("MaxKw")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MinKw")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OsiguranjeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("RegistracijaId", "OsiguranjeVozilaId");
+                    b.Property<decimal>("PricePerKw")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.HasIndex("OsiguranjeVozilaId");
+                    b.HasKey("Id");
 
-                    b.ToTable("OsiguranjeRegistracija");
+                    b.HasIndex("OsiguranjeId");
+
+                    b.ToTable("OsiguranjeCijene");
                 });
 
             modelBuilder.Entity("RegistracijaVozila.Models.Domain.Registracija", b =>
@@ -144,8 +150,8 @@ namespace RegistracijaVozila.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<float>("CijenaRegistracije")
-                        .HasColumnType("real");
+                    b.Property<decimal>("CijenaRegistracije")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("DatumIstekaRegistracije")
                         .HasColumnType("datetime2");
@@ -156,8 +162,15 @@ namespace RegistracijaVozila.Migrations
                     b.Property<Guid>("KlijentId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("OsiguranjeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("PrivremenaRegistracija")
                         .HasColumnType("bit");
+
+                    b.Property<string>("RegistarskaOznaka")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("VoziloId")
                         .HasColumnType("uniqueidentifier");
@@ -165,6 +178,8 @@ namespace RegistracijaVozila.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("KlijentId");
+
+                    b.HasIndex("OsiguranjeId");
 
                     b.HasIndex("VoziloId")
                         .IsUnique();
@@ -204,9 +219,6 @@ namespace RegistracijaVozila.Migrations
                     b.Property<DateTime>("DatumPrveRegistracije")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("DatumRegistracije")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("GodinaProizvodnje")
                         .HasColumnType("int");
 
@@ -218,10 +230,6 @@ namespace RegistracijaVozila.Migrations
 
                     b.Property<Guid>("ModelVozilaId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("RegistarskaOznaka")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SnagaMotora")
                         .HasColumnType("int");
@@ -269,23 +277,15 @@ namespace RegistracijaVozila.Migrations
                     b.Navigation("MarkaVozila");
                 });
 
-            modelBuilder.Entity("RegistracijaVozila.Models.Domain.OsiguranjeRegistracija", b =>
+            modelBuilder.Entity("RegistracijaVozila.Models.Domain.OsiguranjeCijene", b =>
                 {
                     b.HasOne("RegistracijaVozila.Models.Domain.Osiguranje", "Osiguranje")
-                        .WithMany("OsiguranjeRegistracija")
-                        .HasForeignKey("OsiguranjeVozilaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RegistracijaVozila.Models.Domain.Registracija", "Registracija")
-                        .WithMany("OsiguranjeRegistracija")
-                        .HasForeignKey("RegistracijaId")
+                        .WithMany("OsiguranjeCijene")
+                        .HasForeignKey("OsiguranjeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Osiguranje");
-
-                    b.Navigation("Registracija");
                 });
 
             modelBuilder.Entity("RegistracijaVozila.Models.Domain.Registracija", b =>
@@ -296,11 +296,19 @@ namespace RegistracijaVozila.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("RegistracijaVozila.Models.Domain.Osiguranje", "Osiguranje")
+                        .WithMany("Registracije")
+                        .HasForeignKey("OsiguranjeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("RegistracijaVozila.Models.Domain.Vozilo", "Vozilo")
                         .WithOne("Registracija")
                         .HasForeignKey("RegistracijaVozila.Models.Domain.Registracija", "VoziloId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Osiguranje");
 
                     b.Navigation("Vlasnik");
 
@@ -346,12 +354,9 @@ namespace RegistracijaVozila.Migrations
 
             modelBuilder.Entity("RegistracijaVozila.Models.Domain.Osiguranje", b =>
                 {
-                    b.Navigation("OsiguranjeRegistracija");
-                });
+                    b.Navigation("OsiguranjeCijene");
 
-            modelBuilder.Entity("RegistracijaVozila.Models.Domain.Registracija", b =>
-                {
-                    b.Navigation("OsiguranjeRegistracija");
+                    b.Navigation("Registracije");
                 });
 
             modelBuilder.Entity("RegistracijaVozila.Models.Domain.TipVozila", b =>

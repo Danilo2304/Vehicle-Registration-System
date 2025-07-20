@@ -3,40 +3,59 @@ using Microsoft.EntityFrameworkCore;
 using RegistracijaVozila.Data;
 using RegistracijaVozila.Models.Domain;
 using RegistracijaVozila.Repositories.Interface;
+using RegistracijaVozila.Services.Implementation;
+using RegistracijaVozila.Services.Interface;
 
 namespace RegistracijaVozila.Repositories.Implementation
 {
     public class RegistrationVehicleRepository : IRegistrationVehicleRepository
     {
         private readonly RegistracijaVozilaDbContext appDbContext;
+        private readonly IRegistrationCalculatorService registrationCalculatorService;
 
-        public RegistrationVehicleRepository(RegistracijaVozilaDbContext appDbContext)
+        public RegistrationVehicleRepository(RegistracijaVozilaDbContext appDbContext, 
+            IRegistrationCalculatorService registrationCalculatorService)
         {
             this.appDbContext = appDbContext;
+            this.registrationCalculatorService = registrationCalculatorService;
         }
 
         public async Task<Registracija> AddRegistrationAsync(Registracija request)
         {
-            request.DatumIstekaRegistracije = request.DatumRegistracije.AddMonths(12);
-
             await appDbContext.Registracije.AddAsync(request);
             await appDbContext.SaveChangesAsync();
             return request;
         }
 
-        public async Task<List<Registracija>> GetAllAsync()
+        public async Task<(List<Registracija> Items, int TotalCount)> GetAllAsync(string? searchQuery = null, int pageNumber = 1,
+            int pageSize = 1000)
         {
-            return await appDbContext.Registracije
+            var query = appDbContext.Registracije
                 .Include(x => x.Vlasnik)
                 .Include(x => x.Vozilo)
-                    .ThenInclude(v => v.TipVozila)
-                .Include(x => x.Vozilo)
-                    .ThenInclude(v => v.MarkaVozila)
-                .Include(x => x.Vozilo)
-                    .ThenInclude(v => v.ModelVozila)
-                .Include(x => x.OsiguranjeRegistracija)
-                    .ThenInclude(xo => xo.Osiguranje)
-                .ToListAsync();
+                .Include(x => x.Vozilo.TipVozila)
+                .Include(x => x.Vozilo.MarkaVozila)
+                .Include(x=>x.Osiguranje)
+                .Include(x => x.Vozilo.ModelVozila).AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchQuery) == false)
+            {
+                query = query.Where(x => x.Vlasnik.Ime.Contains(searchQuery) ||
+                x.Vlasnik.BrojLicneKarte.Contains(searchQuery) ||
+                x.Vlasnik.Email.Contains(searchQuery) ||
+                x.Vlasnik.JMBG.Contains(searchQuery) ||
+                x.Vlasnik.Prezime.Contains(searchQuery) ||
+                x.Vozilo.MarkaVozila.Naziv.Contains(searchQuery) ||
+                x.Vozilo.ModelVozila.Naziv.Contains(searchQuery) ||
+                x.Vozilo.TipVozila.Naziv.Contains(searchQuery) ||
+                x.Osiguranje.Naziv.Contains(searchQuery)||
+                x.RegistarskaOznaka.Contains(searchQuery));
+            }
+
+            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            var totalCount = await query.CountAsync();
+
+            return (items, totalCount);
         }
 
         public async Task<Registracija?> GetByIdAsync(Guid id)
@@ -46,8 +65,7 @@ namespace RegistracijaVozila.Repositories.Implementation
                             .Include(x => x.Vozilo.TipVozila)
                             .Include(x => x.Vozilo.MarkaVozila)
                             .Include(x => x.Vozilo.ModelVozila)
-                            .Include(x => x.OsiguranjeRegistracija)
-                            .ThenInclude(xo => xo.Osiguranje)
+                            .Include(x => x.Osiguranje)
                             .FirstOrDefaultAsync(x => x.Id == id);
         }
 
@@ -57,9 +75,8 @@ namespace RegistracijaVozila.Repositories.Implementation
                 Include(x => x.Vlasnik).
                 Include(x => x.Vozilo.TipVozila).
                 Include(x => x.Vozilo.MarkaVozila).
-                Include(x => x.Vozilo.ModelVozila).
-                Include(x => x.OsiguranjeRegistracija).
-                ThenInclude(xo => xo.Osiguranje).FirstOrDefaultAsync(x => x.Id == id);
+                Include(x => x.Osiguranje).
+                Include(x => x.Vozilo.ModelVozila).FirstOrDefaultAsync(x => x.Id == id);
 
             appDbContext.Registracije.Remove(existingRegistration);
 
@@ -74,16 +91,16 @@ namespace RegistracijaVozila.Repositories.Implementation
                 Include(x => x.Vlasnik).
                 Include(x => x.Vozilo.TipVozila).
                 Include(x => x.Vozilo.MarkaVozila).
-                Include(x => x.Vozilo.ModelVozila).
-                Include(x => x.OsiguranjeRegistracija).
-                ThenInclude(xo => xo.Osiguranje).FirstOrDefaultAsync(x => x.Id == request.Id);
+                Include(x=>x.Osiguranje).
+                Include(x => x.Vozilo.ModelVozila).FirstOrDefaultAsync(x => x.Id == request.Id);
 
-            existingRegistration.CijenaRegistracije = request.CijenaRegistracije;
+            
+            existingRegistration.RegistarskaOznaka = request.RegistarskaOznaka;
             existingRegistration.DatumRegistracije = request.DatumRegistracije;
             existingRegistration.PrivremenaRegistracija = request.PrivremenaRegistracija;
-            existingRegistration.OsiguranjeRegistracija = request.OsiguranjeRegistracija;
             existingRegistration.VoziloId = request.VoziloId;
             existingRegistration.KlijentId = request.KlijentId;
+            existingRegistration.OsiguranjeId = request.OsiguranjeId;
             existingRegistration.DatumIstekaRegistracije = request.DatumRegistracije.AddMonths(12);
 
             await appDbContext.SaveChangesAsync();

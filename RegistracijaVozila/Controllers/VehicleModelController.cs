@@ -28,20 +28,20 @@ namespace RegistracijaVozila.Controllers
         [HttpGet("List/{id:guid}")]
         public async Task<IActionResult> List(Guid id)
         {
-            var vehicleModelDomainList = await vehicleModelRepository.ListByBrandId(id);
+            var result = await vehicleModelService.GetByBrandId(id);
 
-            if (!vehicleModelDomainList.Any())
+            if (!result.Success)
             {
-                return NotFound(new ApiError
+                var parts = result.Message?.Split(":", 2);
+
+                return BadRequest(new ApiError
                 {
-                    ErrorCode = "NO_MODELS_FOUND",
-                    Message = $"No vehicle models found for brand with Id {id}"
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : result.Message
                 });
             }
 
-            var vehicleModelDtoList = mapper.Map<List<VehicleModelDto>>(vehicleModelDomainList);
-
-            return Ok(vehicleModelDtoList);
+            return Ok(result);
         }
 
         [HttpPost]
@@ -60,26 +60,26 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var vehicleModelDomain = await vehicleModelRepository.GetByIdAsync(id);
+            var result = await vehicleModelService.GetById(id);
 
-            if (vehicleModelDomain == null)
+            if (!result.Success)
             {
-                return NotFound(new ApiError
+                var parts = result.Message?.Split(":", 2);
+
+                return BadRequest(new ApiError
                 {
-                    ErrorCode = "VEHICLE_MODEL_NOT_FOUND",
-                    Message = $"Vehicle model with the Id {id} was not found"
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : result.Message
                 });
             }
 
-            var response = mapper.Map<VehicleModelDto>(vehicleModelDomain);
-
-            return Ok(response);
+            return Ok(result);
         }
 
         [HttpDelete]
@@ -98,7 +98,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPut]
@@ -117,7 +117,7 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
     }
 }

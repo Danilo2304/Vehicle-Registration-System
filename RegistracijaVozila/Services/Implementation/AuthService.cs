@@ -51,30 +51,36 @@ namespace RegistracijaVozila.Services.Implementation
             return RepositoryResult<UserDto>.Ok(response);
         }
 
-        public async Task<RepositoryResult<string>> LoginAsync(LoginRequestDto request)
+        public async Task<RepositoryResult<LoginResponseDto>> LoginAsync(LoginRequestDto request)
         {
             var identityUser = await userManager.FindByNameAsync(request.Username);
 
             if(identityUser==null)
             {
-                return RepositoryResult<string>.Fail($"INVALID_USERNAME: Username {request.Username} not found");
+                return RepositoryResult<LoginResponseDto>.Fail($"INVALID_USERNAME: Username {request.Username} not found");
             }
 
             if (identityUser.Email != request.Email)
             {
-                return RepositoryResult<string>.Fail($"INVALID_EMAIL: Email {request.Email} not found");
+                return RepositoryResult<LoginResponseDto>.Fail($"INVALID_EMAIL: Email {request.Email} not found");
             }
 
             var passwordValid = await userManager.CheckPasswordAsync(identityUser, request.Password);
 
             if (!passwordValid)
             {
-                return RepositoryResult<string>.Fail("INVALID_PASSWORD: Incorrect password");
+                return RepositoryResult<LoginResponseDto>.Fail("INVALID_PASSWORD: Incorrect password");
             }
 
             var token = await tokenService.GenerateJwtTokenAsync(identityUser);
+            var roles = await userManager.GetRolesAsync(identityUser);
 
-            return RepositoryResult<string>.Ok(token);
+            var response = mapper.Map<LoginResponseDto>(identityUser);
+            response.Token = token;
+            response.Roles = roles.ToList();
+            
+
+            return RepositoryResult<LoginResponseDto>.Ok(response);
         }
 
         public async Task<RepositoryResult<UserDto>> DeleteAsync(string id)
@@ -122,7 +128,7 @@ namespace RegistracijaVozila.Services.Implementation
         }
 
         public async Task<RepositoryResult<UserDto>> ChangePasswordAsync
-            (string userId, string currentPassword, string newPassword)
+            (string userId,string currentPassword, string newPassword)
         {
             var user = await userManager.FindByIdAsync(userId);
 
@@ -143,7 +149,7 @@ namespace RegistracijaVozila.Services.Implementation
 
             var response = mapper.Map<UserDto>(user);
 
-            return RepositoryResult<UserDto>.Ok( response );
+            return RepositoryResult<UserDto>.Ok(response);
                 
         }
 

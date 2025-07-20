@@ -8,7 +8,9 @@
 
         public DateTime DatumIstekaRegistracije { get; set; }
 
-        public float CijenaRegistracije { get; set; }
+        public decimal CijenaRegistracije { get; set; }
+
+        public string RegistarskaOznaka { get; set; }
 
         public bool PrivremenaRegistracija {  get; set; }
 
@@ -20,8 +22,9 @@
 
         public Vozilo Vozilo { get; set; }
 
-        public ICollection<OsiguranjeRegistracija> OsiguranjeRegistracija { get; set; } 
-            = new List<OsiguranjeRegistracija>();
+        public Guid OsiguranjeId { get; set; }
+
+        public Osiguranje Osiguranje { get; set; }
 
     }
 }
