@@ -49,17 +49,11 @@ namespace RegistracijaVozila.Services.Implementation
                 return RepositoryResult<bool>.Fail("INVALID_COMBINATION: " +
                     "Model doesn't match brand and vehicle type");
 
-            
-
             if (await appDbContext.Vozila.AnyAsync(x => x.BrojSasije == request.BrojSasije))
                 return RepositoryResult<bool>.Fail("CHASSIS_NUMBER_EXISTS: Chassis number already used");
 
             if (request.GodinaProizvodnje < 1900 || request.GodinaProizvodnje > DateTime.Now.Year)
                 return RepositoryResult<bool>.Fail("INVALID_YEAR: Invalid production year");
-
-            if (request.DatumPrveRegistracije > request.DatumRegistracije)
-                return RepositoryResult<bool>.Fail("DATE_MISMATCH: " +
-                    "First registration must be before actual registration");
 
             if (request.SnagaMotora <= 0)
                 return RepositoryResult<bool>.Fail("INVALID_ENGINE_POWER: " +
@@ -164,10 +158,6 @@ namespace RegistracijaVozila.Services.Implementation
 
             if (request.GodinaProizvodnje < 1900 || request.GodinaProizvodnje > DateTime.Now.Year)
                 return RepositoryResult<bool>.Fail("INVALID_YEAR: Invalid production year");
-
-            if (request.DatumPrveRegistracije > request.DatumRegistracije)
-                return RepositoryResult<bool>.Fail("DATE_MISMATCH: " +
-                    "First registration must be before actual registration");
 
             if (request.SnagaMotora <= 0)
                 return RepositoryResult<bool>.Fail("INVALID_ENGINE_POWER: " +

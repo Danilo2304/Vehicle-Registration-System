@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RegistracijaVozila.Data;
@@ -11,6 +12,7 @@ using RegistracijaVozila.Repositories.Implementation;
 using RegistracijaVozila.Repositories.Interface;
 using RegistracijaVozila.Services.Implementation;
 using RegistracijaVozila.Services.Interface;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,10 +86,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddSwaggerGen(c =>
 {
-    // existing Swagger setup
+    
     c.SwaggerDoc("v1", new() { Title = "My API", Version = "v1" });
 
-    // add this:
+    
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -113,6 +115,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 

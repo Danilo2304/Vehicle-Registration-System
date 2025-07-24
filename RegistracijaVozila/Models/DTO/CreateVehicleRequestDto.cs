@@ -26,8 +26,6 @@ namespace RegistracijaVozila.Models.DTO
 
         public string BrojSasije { get; set; }
 
-        public DateTime DatumRegistracije { get; set; }
-
         public DateTime DatumPrveRegistracije { get; set; }
     }
 }

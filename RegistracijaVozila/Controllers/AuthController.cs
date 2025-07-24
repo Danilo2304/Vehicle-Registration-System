@@ -23,20 +23,35 @@ namespace RegistracijaVozila.Controllers
             this.authService = authService;
         }
 
-        [AllowAnonymous]
+        [HttpGet]
+        //[Authorize(Roles ="Admin")]
+        public async Task<IActionResult> List()
+        {
+            var result = await authService.GetAll();
+
+            return Ok(result.Data);
+        }
+
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
         {
-            var result = await authService.RegisterAsync(request);
+            var currentUser = User;
+            var result = await authService.RegisterAsync(request, currentUser);
 
             if (!result.Success)
             {
-                ModelState.AddModelError("RegistrationError", result.Message);
-                return ValidationProblem(ModelState);
+                var parts = result.Message?.Split(":", 2);
+
+                return BadRequest(new ApiError
+                {
+                    ErrorCode = parts?[0],
+                    Message = parts?[1].Length > 1 ? parts[1] : result.Message
+                });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [AllowAnonymous]
@@ -56,10 +71,11 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(new { Token = result.Data });
+            return Ok(new { Token = result });
         }
 
         [HttpDelete]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(string id)
         {
             var result = await authService.DeleteAsync(id);
@@ -75,20 +91,22 @@ namespace RegistracijaVozila.Controllers
                 });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPut("updateUser")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update([FromBody] UpdateUserRequestDto request)
         {
-            var result = await authService.UpdateUserAsync(request);
+            var currentUser = User;
+            var result = await authService.UpdateUserAsync(request, currentUser);
 
             if (!result.Success)
             {
                 return BadRequest(result.Errors.Any() ? result.Errors : new[] { result.Message });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         //[Authorize]
@@ -105,7 +123,7 @@ namespace RegistracijaVozila.Controllers
                 return BadRequest(result.Errors.Any() ? result.Errors : new[] { result.Message });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPut("resetPassword")]
@@ -118,7 +136,7 @@ namespace RegistracijaVozila.Controllers
                 return BadRequest(result.Errors.Any() ? result.Errors : new[] { result.Message });
             }
 
-            return Ok(result.Data);
+            return Ok(result);
         }
 
 
